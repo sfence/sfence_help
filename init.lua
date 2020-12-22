@@ -39,3 +39,23 @@ local command_print_all_items = {
       end
   };
 minetest.register_chatcommand("print_all_items", command_print_all_items)
+
+local command_find_nearby_node = {
+    params = "<nodename>",
+    description = "Print location of first found node with name <nodename>",
+    privs = nil,
+    func = function (name, param)
+        -- check param
+        if (param==nil) or (param=="") then
+          return false, "Use /find_nearby_node nodename";
+        end
+        
+        local player = minetest.get_player_by_name(name);
+        local find_pos = minetest.find_node_near(player:get_pos(), 128, param);
+        if (find_pos==nil) then
+          return false, "Node "..param.." not found in radius 128";
+        end
+        return true, "Node "..param.." found at x="..find_pos.x.." y="..find_pos.y.." z="..find_pos.z;
+      end
+  };
+minetest.register_chatcommand("find_nearby_node", command_find_nearby_node)
