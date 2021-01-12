@@ -2,7 +2,7 @@
 sfence_help = {}
 
 local function isFile(filename)
-    file = io.open(filename);
+    local file = io.open(filename);
     if (file==nil) then 
       return false;
     end
@@ -23,8 +23,13 @@ local command_print_all_items = {
         -- command body
         local filename = minetest.get_worldpath().."/"..param;
         
-        local list_text = "";
+        local use_items = {};
         for item_name in pairs(minetest.registered_items) do
+          table.insert(use_items, item_name);
+        end
+        table.sort(use_items);
+        local list_text = "";
+        for index, item_name in pairs(use_items) do
           list_text = list_text..item_name.."\n";
         end
         
@@ -39,6 +44,45 @@ local command_print_all_items = {
       end
   };
 minetest.register_chatcommand("print_all_items", command_print_all_items)
+
+local command_print_all_recipes = {
+    params = "<file>",
+    description = "Save list of all registered recipes to file <file>",
+    privs = nil,
+    func = function (name, param)
+        -- check param
+        if (param==nil) or (param=="") then
+          return false, "Use /print_all_recipes filename";
+        end
+        -- command body
+        local filename = minetest.get_worldpath().."/"..param;
+        
+        local use_items = {};
+        for item_name in pairs(minetest.registered_items) do
+          table.insert(use_items, item_name);
+        end
+        table.sort(use_items);
+        local list_text = "";
+        for index, item_name in pairs(use_items) do
+          local recipes = minetest.get_all_craft_recipes(item_name);
+          if (recipes~=nil) then
+            for key, recipe in pairs(recipes) do
+              list_text = list_text..dump(recipe).."\n";
+            end
+          end
+        end
+        
+        if isFile(filename) then
+          return false, "File \""..filename.."\" already exists!";
+        end
+
+        local file = io.open(filename,"w");
+        file:write(list_text);
+        file:close();
+        return true, "List of registered recipes saved to file \""..filename.."\".";
+      end
+  };
+minetest.register_chatcommand("print_all_recipes", command_print_all_recipes)
 
 local command_find_nearby_node = {
     params = "<nodename>",
