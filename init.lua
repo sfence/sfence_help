@@ -103,3 +103,52 @@ local command_find_nearby_node = {
       end
   };
 minetest.register_chatcommand("find_nearby_node", command_find_nearby_node)
+
+local command_print_definition_node = {
+    params = "<nodename>",
+    description = "Print <nodename> definition like warning to server terminal.",
+    privs = nil,
+    func = function (name, param)
+        -- check param
+        if (param==nil) or (param=="") then
+          return false, "Use /print_definition_node nodename";
+        end
+        
+        local node_def = minetest.registered_items[param];
+        if node_def then
+          minetest.log("warning", param..":\n"..dump(node_def));
+          return true, "Node definition has been printed into server terminal like warning.";
+        else
+          return false, "Node "..param.." definition not found.";
+        end
+      end
+  };
+minetest.register_chatcommand("print_definition_node", command_print_definition_node)
+
+local command_print_node = {
+    params = "<position>",
+    description = "Print <positon> node data like warning to server terminal.",
+    privs = nil,
+    func = function (name, param)
+        -- check param
+        if (param==nil) or (param=="") then
+          return false, "Use /print_node position";
+        end
+        
+        local node_pos = minetest.string_to_pos(param)
+        if node_pos==nil then
+          return false, "Position "..param.." failed to conversion to pos.";
+        end
+        local node_data = minetest.get_node(node_pos);
+        if node_data then
+          local node_meta = minetest.get_meta(node_pos):to_table();
+          minetest.log("warning", param..":\n"..dump(node_data));
+          minetest.log("warning", param..":\n"..dump(node_meta));
+          return true, "Node data has been printed into server terminal like warning.";
+        else
+          return false, "Node "..param.." data not found.";
+        end
+      end
+  };
+minetest.register_chatcommand("print_node", command_print_node)
+
