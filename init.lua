@@ -10,11 +10,10 @@ local function isFile(filename)
     return true;
   end
 
-
 local command_print_all_items = {
     params = "<file>",
     description = "Save list of all registered item names to file <file>",
-    privs = nil,
+    privs = {admin=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
@@ -48,7 +47,7 @@ minetest.register_chatcommand("print_all_items", command_print_all_items)
 local command_print_all_recipes = {
     params = "<file>",
     description = "Save list of all registered recipes to file <file>",
-    privs = nil,
+    privs = {admin=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
@@ -87,7 +86,7 @@ minetest.register_chatcommand("print_all_recipes", command_print_all_recipes)
 local command_find_nearby_node = {
     params = "<nodename>",
     description = "Print location of first found node with name <nodename>",
-    privs = nil,
+    privs = {admin=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
@@ -107,7 +106,7 @@ minetest.register_chatcommand("find_nearby_node", command_find_nearby_node)
 local command_print_definition_node = {
     params = "<nodename>",
     description = "Print <nodename> definition like warning to server terminal.",
-    privs = nil,
+    privs = {admin=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
@@ -128,7 +127,7 @@ minetest.register_chatcommand("print_definition_node", command_print_definition_
 local command_print_node = {
     params = "<position>",
     description = "Print <positon> node data like warning to server terminal.",
-    privs = nil,
+    privs = {admin=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
@@ -151,4 +150,24 @@ local command_print_node = {
       end
   };
 minetest.register_chatcommand("print_node", command_print_node)
+
+local command_print_player = {
+    params = "<player_name>",
+    description = "Print <player_name> object details.",
+    privs = {admin=true},
+    func = function (name, param)
+        -- check param
+        if (param==nil) or (param=="") then
+          return false, "Use /print_player player_name";
+        end
+        
+        local player = minetest.get_player_by_name(param);
+        if player==nil then
+          return false, "Player "..player.." object not found.";
+        end
+        minetest.log("warning", dump(player:get_properties()));
+        return true, "Player data has been printed into server terminal like warning.";
+      end
+  };
+minetest.register_chatcommand("print_player", command_print_player)
 
