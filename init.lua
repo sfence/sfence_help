@@ -13,7 +13,7 @@ local function isFile(filename)
 local command_print_all_items = {
     params = "<file>",
     description = "Save list of all registered item names to file <file>",
-    privs = {admin=true},
+    privs = {debug=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
@@ -21,23 +21,24 @@ local command_print_all_items = {
         end
         -- command body
         local filename = minetest.get_worldpath().."/"..param;
-        
-        local use_items = {};
-        for item_name in pairs(minetest.registered_items) do
-          table.insert(use_items, item_name);
-        end
-        table.sort(use_items);
-        local list_text = "";
-        for index, item_name in pairs(use_items) do
-          list_text = list_text..item_name.."\n";
-        end
-        
+         
         if isFile(filename) then
           return false, "File \""..filename.."\" already exists!";
         end
 
         local file = io.open(filename,"w");
-        file:write(list_text);
+        
+        local use_items = {};
+        for item_name in pairs(minetest.registered_items) do
+          --table.insert(use_items, item_name);
+          file:write(item_name.."\n");
+        end
+        --table.sort(use_items);
+        --local list_text = "";
+        --for index, item_name in pairs(use_items) do
+        --  list_text = list_text..item_name.."\n";
+        --end
+        --file:write(list_text);
         file:close();
         return true, "List of registered items saved to file \""..filename.."\".";
       end
@@ -47,7 +48,7 @@ minetest.register_chatcommand("print_all_items", command_print_all_items)
 local command_print_all_recipes = {
     params = "<file>",
     description = "Save list of all registered recipes to file <file>",
-    privs = {admin=true},
+    privs = {debug=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
@@ -86,7 +87,7 @@ minetest.register_chatcommand("print_all_recipes", command_print_all_recipes)
 local command_find_nearby_node = {
     params = "<nodename>",
     description = "Print location of first found node with name <nodename>",
-    privs = {admin=true},
+    privs = {debug=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
@@ -106,7 +107,7 @@ minetest.register_chatcommand("find_nearby_node", command_find_nearby_node)
 local command_print_definition_node = {
     params = "<nodename>",
     description = "Print <nodename> definition like warning to server terminal.",
-    privs = {admin=true},
+    privs = {debug=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
@@ -123,11 +124,12 @@ local command_print_definition_node = {
       end
   };
 minetest.register_chatcommand("print_definition_node", command_print_definition_node)
+minetest.register_chatcommand("print_definition_item", command_print_definition_node)
 
 local command_print_node = {
     params = "<position>",
     description = "Print <positon> node data like warning to server terminal.",
-    privs = {admin=true},
+    privs = {debug=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
@@ -141,8 +143,10 @@ local command_print_node = {
         local node_data = minetest.get_node(node_pos);
         if node_data then
           local node_meta = minetest.get_meta(node_pos):to_table();
-          minetest.log("warning", param..":\n"..dump(node_data));
-          minetest.log("warning", param..":\n"..dump(node_meta));
+          local node_timer = minetest.get_node_timer(node_pos);
+          minetest.log("warning", param.." data: :\n"..dump(node_data));
+          minetest.log("warning", param.." meta:\n"..dump(node_meta));
+          minetest.log("warning", param.." timer: "..node_timer:get_elapsed().."/"..node_timer:get_timeout());
           return true, "Node data has been printed into server terminal like warning.";
         else
           return false, "Node "..param.." data not found.";
@@ -151,10 +155,25 @@ local command_print_node = {
   };
 minetest.register_chatcommand("print_node", command_print_node)
 
+local command_print_wielded_item = {
+    params = "",
+    description = "Print wielded item data like warning to server terminal.",
+    privs = {debug=true},
+    func = function (name, param)
+        local player = minetest.get_player_by_name(name);
+        local wielded_item = player:get_wielded_item();
+        local item_name = wielded_item:get_name()
+        
+        minetest.log("warning", item_name..":\n"..dump(wielded_item:to_table()));
+        return true, "Wielded item data has been printed into server terminal like warning.";
+      end
+  };
+minetest.register_chatcommand("print_wielded_item", command_print_wielded_item)
+
 local command_print_player = {
     params = "<player_name>",
     description = "Print <player_name> object details.",
-    privs = {admin=true},
+    privs = {debug=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
