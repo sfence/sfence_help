@@ -104,6 +104,59 @@ local command_find_nearby_node = {
   };
 minetest.register_chatcommand("find_nearby_node", command_find_nearby_node)
 
+local command_find_nearby_entity = {
+    params = "<entityname>",
+    description = "Print location of first found entity with name <entityname>",
+    privs = {debug=true},
+    func = function (name, param)
+        -- check param
+        if (param==nil) or (param=="") then
+          return false, "Use /find_nearby_entity entityname";
+        end
+        
+        local player = minetest.get_player_by_name(name);
+        local objects = minetest.get_objects_inside_radius(player:get_pos(), 128);
+        local find_pos = nil;
+        for _,object in pairs(objects) do
+          local luaentity = object:get_luaentity()
+          if luaentity and (luaentity.name==param) then
+            find_pos = object:get_pos();
+            break;
+          end
+        end
+        if (find_pos==nil) then
+          return false, "Entity "..param.." not found in radius 128";
+        end
+        return true, "Entity "..param.." found at x="..find_pos.x.." y="..find_pos.y.." z="..find_pos.z;
+      end
+  };
+minetest.register_chatcommand("find_nearby_entity", command_find_nearby_entity)
+
+local command_remove_nearby_entities = {
+    params = "<entityname>",
+    description = "Delete found entities with name <entityname>",
+    privs = {debug=true},
+    func = function (name, param)
+        -- check param
+        if (param==nil) or (param=="") then
+          return false, "Use /remove_nearby_entities entityname";
+        end
+        
+        local player = minetest.get_player_by_name(name);
+        local objects = minetest.get_objects_inside_radius(player:get_pos(), 128);
+        local removed = 0
+        for _,object in pairs(objects) do
+          local luaentity = object:get_luaentity()
+          if luaentity and (luaentity.name==param) then
+            object:remove()
+            removed = removed + 1
+          end
+        end
+        return true, "Removed "..removed.." entities."
+      end
+  };
+minetest.register_chatcommand("remove_nearby_entities", command_remove_nearby_entities)
+
 local command_print_definition_node = {
     params = "<nodename>",
     description = "Print <nodename> definition like warning to server terminal.",
@@ -125,6 +178,27 @@ local command_print_definition_node = {
   };
 minetest.register_chatcommand("print_definition_node", command_print_definition_node)
 minetest.register_chatcommand("print_definition_item", command_print_definition_node)
+
+local command_print_definition_entity = {
+    params = "<entityname>",
+    description = "Print <entityname> definition like warning to server terminal.",
+    privs = {debug=true},
+    func = function (name, param)
+        -- check param
+        if (param==nil) or (param=="") then
+          return false, "Use /print_definition_entity entityname";
+        end
+        
+        local entity_def = minetest.registered_entities[param];
+        if entity_def then
+          minetest.log("warning", param..":\n"..dump(entity_def));
+          return true, "Entity definition has been printed into server terminal like warning.";
+        else
+          return false, "Entity "..param.." definition not found.";
+        end
+      end
+  };
+minetest.register_chatcommand("print_definition_entity", command_print_definition_entity)
 
 local command_print_node = {
     params = "<position>",
@@ -190,3 +264,32 @@ local command_print_player = {
   };
 minetest.register_chatcommand("print_player", command_print_player)
 
+local command_lua2mts = {
+    params = "<schema_name>",
+    description = "Convert <schema_name>.lua tp <schema_name>.mts.",
+    privs = {debug=true},
+    func = function (name, param)
+        -- check param
+        if (param==nil) or (param=="") then
+          return false, "Use /lua2mts schema_name";
+        end
+        
+        local schema_name = param
+        local dir = minetest.get_worldpath().."/schems/";
+        local f = io.open(dir..schema_name..".lua", "r");
+        if not f then
+          return false, "Schema lua file does not exists.";
+        end
+        local schematic = f:read("*all");
+        f:close();
+        schematic = loadstring(schematic.." return schematic");
+        schematic = schematic()
+        schematic = minetest.serialize_schematic(schematic, "mts", {});
+        local f = io.open(dir..schema_name..".mts", "w");
+        f:write(schematic);
+        f:close();
+        
+        return true, "Schema has been converted.";
+      end
+  };
+minetest.register_chatcommand("lua2mts", command_lua2mts)
