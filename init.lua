@@ -295,14 +295,14 @@ local command_lua2mts = {
 minetest.register_chatcommand("lua2mts", command_lua2mts)
 
 local command_set_node = {
-    params = "<position> <node_name> [<param>] [<param2>]",
+    params = "<position> <node_name> [<param1>] [<param2>]",
     description = "Set node at <positon>.",
     privs = {debug=true},
     func = function (name, param)
         -- check param
         local params = string.split(param or "", " ")
         if (param==nil) or (param=="") or (#params<2) then
-          return false, "Use /set_node position node_name [param] [param2]";
+          return false, "Use /set_node position node_name [param1] [param2]";
         end
         
         local node_pos = minetest.string_to_pos(params[1])
@@ -312,21 +312,21 @@ local command_set_node = {
         if not minetest.registered_nodes[params[2]] then
           return false, "Node with name "..params[2].." is not registered.";
         end
-        minetest.set_node(node_pos, {name=params[2],param=tonumber(params[3] or "0"), param2=tonumber(params[4] or "0")});
+        minetest.set_node(node_pos, {name=params[2],param1=tonumber(params[3] or "0"), param2=tonumber(params[4] or "0")});
         return true, "Set node "..params[2].." on position "..params[1]..".";
       end
   };
 minetest.register_chatcommand("set_node", command_set_node)
 
 local command_swap_node = {
-    params = "<position> <node_name> [<param>] [<param2>]",
+    params = "<position> <node_name> [<param1>] [<param2>]",
     description = "Swap node at <positon>.",
     privs = {debug=true},
     func = function (name, param)
         -- check param
         local params = string.split(param or "", " ")
         if (param==nil) or (param=="") or (#params<2) then
-          return false, "Use /swap_node position node_name [param] [param2]";
+          return false, "Use /swap_node position node_name [param1] [param2]";
         end
         
         local node_pos = minetest.string_to_pos(params[1])
@@ -336,21 +336,21 @@ local command_swap_node = {
         if not minetest.registered_nodes[params[2]] then
           return false, "Node with name "..params[2].." is not registered.";
         end
-        minetest.set_node(node_pos, {name=params[2],param=tonumber(params[3] or "0"), param2=tonumber(params[4] or "0")});
+        minetest.set_node(node_pos, {name=params[2],param1=tonumber(params[3] or "0"), param2=tonumber(params[4] or "0")});
         return true, "Swap to node "..params[2].." on position "..params[1]..".";
       end
   };
 minetest.register_chatcommand("swap_node", command_swap_node)
 
-local command_set_node_param = {
-    params = "<position> <param>",
-    description = "Set node param at <positon>.",
+local command_set_node_param1 = {
+    params = "<position> <param1>",
+    description = "Set node param1 at <positon>.",
     privs = {debug=true},
     func = function (name, param)
         -- check param
         local params = string.split(param or "", " ")
         if (param==nil) or (param=="") or (#params<2) then
-          return false, "Use /set_node_param position param";
+          return false, "Use /set_node_param1 position param1";
         end
         
         local node_pos = minetest.string_to_pos(params[1])
@@ -358,12 +358,12 @@ local command_set_node_param = {
           return false, "Position "..params[1].." failed to conversion to pos.";
         end
         local node_data = minetest.get_node(node_pos)
-        node_data.param = tonumber(params[2])
+        node_data.param1 = tonumber(params[2])
         minetest.swap_node(node_pos, node_data);
         return true, "Set param of node on  position "..params[1].." to "..params[2]..".";
       end
   };
-minetest.register_chatcommand("set_node_param", command_set_node_param)
+minetest.register_chatcommand("set_node_param1", command_set_node_param1)
 
 local command_set_node_param2 = {
     params = "<position> <param2>",
