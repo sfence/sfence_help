@@ -387,3 +387,15 @@ local command_set_node_param2 = {
       end
   };
 minetest.register_chatcommand("set_node_param2", command_set_node_param2)
+
+local command_print_facedir_to_dir = {
+    params = "",
+    description = "Print facedir to dir.",
+    privs = {debug=true},
+    func = function (name, param)
+        local facedir = tonumber(param)%32;
+        return true, "Facedir "..facedir.." dir is "..minetest.pos_to_string(minetest.facedir_to_dir(facedir));
+      end
+  };
+minetest.register_chatcommand("print_facedir_to_dir", command_print_facedir_to_dir)
+
