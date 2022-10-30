@@ -266,7 +266,7 @@ minetest.register_chatcommand("print_player", command_print_player)
 
 local command_lua2mts = {
     params = "<schema_name>",
-    description = "Convert <schema_name>.lua tp <schema_name>.mts.",
+    description = "Convert <schema_name>.lua to <schema_name>.mts.",
     privs = {debug=true},
     func = function (name, param)
         -- check param
@@ -276,9 +276,10 @@ local command_lua2mts = {
         
         local schema_name = param
         local dir = minetest.get_worldpath().."/schems/";
-        local f = io.open(dir..schema_name..".lua", "r");
+        local schema_lua_file = dir..schema_name..".lua"
+        local f = io.open(schema_lua_file, "r");
         if not f then
-          return false, "Schema lua file does not exists.";
+          return false, "Schema lua file \""..schema_lua_file.."\" does not exists.";
         end
         local schematic = f:read("*all");
         f:close();
@@ -398,4 +399,30 @@ local command_print_facedir_to_dir = {
       end
   };
 minetest.register_chatcommand("print_facedir_to_dir", command_print_facedir_to_dir)
+
+local command_print_mods = {
+    params = "",
+    description = "Print mods to file.",
+    privs = {debug=true},
+    func = function (name, param)
+        -- command body
+        local filename = minetest.get_worldpath().."/"..param;
+         
+        if isFile(filename) then
+          return false, "File \""..filename.."\" already exists!";
+        end
+
+        local file = io.open(filename,"w");
+        
+        file:write("{\n")
+        for _,mod_name in pairs(minetest.get_modnames()) do
+          --table.insert(use_items, item_name);
+          file:write("  [\""..mod_name.."\"] = \""..minetest.get_modpath(mod_name).."\",\n");
+        end
+        file:write("}\n")
+        file:close();
+        return true, "Enabled mod names and paths has been saved to file \""..filename.."\".";
+      end
+  };
+minetest.register_chatcommand("print_mods", command_print_mods)
 
