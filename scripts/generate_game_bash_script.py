@@ -8,7 +8,7 @@ import pathlib
 import lupa
 
 if (len(sys.argv)<3):
-  print("Usage: generate_game_bash_script.py mods_file script_file")
+  print("Usage: generate_game_bash_script.py mods_file script_file [follow_commit]")
   exit();
 
 mods_file = open(sys.argv[1], "r");
@@ -21,6 +21,14 @@ mods_names = dict(lua.eval(mods_names))
 game_repo = None
 mod_repos = dict()
 no_repos = dict()
+
+follow_commit = False
+if (len(sys.argv)>3):
+  if sys.argv[3]=="follow_commit":
+    follow_commit = True
+    print("Git checkouts will follow specific commits.")
+  else:
+    print("Git checkouts will preffer follow of specific branch.")
 
 for mod_name in mods_names.keys():
   result = subprocess.run(["git", "-C", mods_names[mod_name], "rev-parse", "--show-superproject-working-tree", "--show-toplevel"], capture_output=True)
@@ -41,14 +49,17 @@ for mod_name in mods_names.keys():
   else:
     no_repos[mod_name] = mods_names[mod_name]
 
-def repo_update_path_to_script(repo_path, name):
+def repo_update_path_to_script(repo_path, name, follow_commit):
   script = ""
   try:
-    result = subprocess.run(["git", "-C", repo_path, "branch", "--show-current"], capture_output=True)
-    if result.returncode!=0:
-      print("git rev-parse failed for {}".format(repo_path))
-      raise Exception(result.stderr)
-    checkout_to = result.stdout[:-1].decode("utf-8")
+    checkout_to = ""
+    
+    if not follow_commit:
+      result = subprocess.run(["git", "-C", repo_path, "branch", "--show-current"], capture_output=True)
+      if result.returncode!=0:
+        print("git branch failed for {}".format(repo_path))
+        raise Exception(result.stderr)
+      checkout_to = result.stdout[:-1].decode("utf-8")
     need_merge = True
     if checkout_to=="":
       result = subprocess.run(["git", "-C", repo_path, "rev-parse", "HEAD"], capture_output=True)
@@ -130,7 +141,7 @@ script = "{}echo \"Getting game\"\n".format(script)
 if game_repo:
   script = "{}# {}\n".format(script, game_repo)
   script = "{}repodir=$gamedir/$gameid\n".format(script)
-  script = "{}{}".format(script, repo_update_path_to_script(game_repo, "game"))
+  script = "{}{}".format(script, repo_update_path_to_script(game_repo, "game", follow_commit))
 else:
   raise Exception("No game repository has been detected. \"{}\"".format(game_repo))
 
@@ -146,7 +157,7 @@ for repo_path in mod_repos.keys():
     mod_name = pathlib.PurePath(repo_path)
     mod_name = mod_name.parts[-1]
   script = "{}repodir=$modsdir/{}\n".format(script, mod_name)
-  script = "{}{}".format(script, repo_update_path_to_script(repo_path, mod_name))
+  script = "{}{}".format(script, repo_update_path_to_script(repo_path, mod_name, follow_commit))
     
 
 for mod_name in no_repos.keys():
@@ -173,10 +184,11 @@ for mod_name in no_repos.keys():
     script = "{}  unzip -d \"$modsdir\" \"$modsdir/{}.zip\"\n".format(script, mod_name)
     script = "{}  rm \"$modsdir/{}.zip\"\n".format(script, mod_name)
     script = "{}fi\n".format(script)
+    print("WARNING: Mod {} in directory \"{}\" is not maintained by GIT. It will be automaticly downloaded from ContentDB.".format(mod_name, mods_names[mod_name]))
     
   else:
     script = "{}# place insert code for mod {} here\n\n".format(script, mod_name, mod_name)
-  print("WARNING: Mod {} in directory \"{}\" is not maintained by GIT. It have to be added manualy to script.".format(mod_name, mods_names[mod_name]))
+    print("WARNING: Mod {} in directory \"{}\" is not maintained by GIT. It have to be added manualy to script.".format(mod_name, mods_names[mod_name]))
 
 script = "{}# game commit check\n".format(script)
 script = "{}repodir=$gamedir/$gameid\n".format(script)
