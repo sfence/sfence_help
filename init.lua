@@ -218,9 +218,7 @@ local command_print_node = {
         if node_data then
           local node_meta = minetest.get_meta(node_pos):to_table();
           local node_timer = minetest.get_node_timer(node_pos);
-          minetest.log("warning", param.." data: :\n"..dump(node_data));
-          minetest.log("warning", param.." meta:\n"..dump(node_meta));
-          minetest.log("warning", param.." timer: "..node_timer:get_elapsed().."/"..node_timer:get_timeout());
+          minetest.log("warning", param.."\ndata:\n"..dump(node_data).."\nmeta:\n"..dump(node_meta).."\ntimer: "..node_timer:get_elapsed().."/"..node_timer:get_timeout());
           return true, "Node data has been printed into server terminal like warning.";
         else
           return false, "Node "..param.." data not found.";
@@ -390,7 +388,7 @@ local command_set_node_param2 = {
 minetest.register_chatcommand("set_node_param2", command_set_node_param2)
 
 local command_print_facedir_to_dir = {
-    params = "",
+    params = "<facedir>",
     description = "Print facedir to dir.",
     privs = {debug=true},
     func = function (name, param)
@@ -401,7 +399,7 @@ local command_print_facedir_to_dir = {
 minetest.register_chatcommand("print_facedir_to_dir", command_print_facedir_to_dir)
 
 local command_print_mods = {
-    params = "",
+    params = "<filename>",
     description = "Print mods to file.",
     privs = {debug=true},
     func = function (name, param)
@@ -425,4 +423,20 @@ local command_print_mods = {
       end
   };
 minetest.register_chatcommand("print_mods", command_print_mods)
+
+local command_exec_lua = {
+    params = "<code>",
+    description = "Exec lua code. Can cause unexpected behaviors.",
+    privs = {debug=true},
+    func = function (name, param)
+        local result,errmsg = loadstring(param)
+        if errmsg==nil then
+          minetest.log("warning", "Code \""..param.."\" execution result: "..dump(result()))
+          return true, "Execution done and result has been printed to server stdout as warning."
+        else
+          return false, "Execution finished with error: "..errmsg
+        end
+      end
+  };
+minetest.register_chatcommand("exec_lua", command_exec_lua)
 
