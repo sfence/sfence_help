@@ -1,6 +1,9 @@
 
 sfence_help = {}
 
+sfence_help.long_output_type = "terminal"
+sfence_help.long_output_type_param = ""
+
 local function isFile(filename)
     local file = io.open(filename);
     if (file==nil) then 
@@ -9,6 +12,42 @@ local function isFile(filename)
     io.close(file);
     return true;
   end
+
+local function terminal_log(name, message)
+  if (sfence_help.long_output_type=="chat") then
+    minetest.chat_send_player(name, "[TERMINMAL MSG]: "..message)
+  elseif (sfence_help.long_output_type=="file") then
+    local filename = minetest.get_worldpath().."/"..sfence_help.long_output_type_param;
+    local file = io.open(filename,"a");
+    if file then
+      file:write(message.."\n");
+      file:close()
+    else
+      minetest.chat_send_player(name, "Output cannot be redirected to file \""..filename.."\".")
+    end
+  else
+    minetest.log("warning", message)
+  end
+end
+
+local command_long_output_type = {
+    params = "<long_output_type>",
+    description = "Show/Set long output type",
+    privs = {debug=true},
+    func = function (name, param)
+        -- check param
+        if (param==nil) or (param=="") then
+          return true, "Long output type value is \""..sfence_help.long_output_type.."\" with param \""..(sfence_help.long_output_type_param or "").."\".";
+        end
+        -- split params
+        local splitted = string.split(param, " ", false, 2, false)
+        -- set it
+        sfence_help.long_output_type = splitted[1]
+        sfence_help.long_output_type_param = splitted[2]
+        return true, "Long output type has been set to value \""..splitted[1].."\" with param \""..(splitted[2] or "").."\".";
+      end
+}
+minetest.register_chatcommand("long_output_type", command_long_output_type)
 
 local command_print_all_items = {
     params = "<file>",
@@ -169,7 +208,7 @@ local command_print_definition_node = {
         
         local node_def = minetest.registered_items[param];
         if node_def then
-          minetest.log("warning", param..":\n"..dump(node_def));
+          terminal_log(name, param..":\n"..dump(node_def));
           return true, "Node definition has been printed into server terminal like warning.";
         else
           return false, "Node "..param.." definition not found.";
@@ -191,7 +230,7 @@ local command_print_definition_entity = {
         
         local entity_def = minetest.registered_entities[param];
         if entity_def then
-          minetest.log("warning", param..":\n"..dump(entity_def));
+          terminal_log(name, param..":\n"..dump(entity_def));
           return true, "Entity definition has been printed into server terminal like warning.";
         else
           return false, "Entity "..param.." definition not found.";
@@ -218,7 +257,7 @@ local command_print_node = {
         if node_data then
           local node_meta = minetest.get_meta(node_pos):to_table();
           local node_timer = minetest.get_node_timer(node_pos);
-          minetest.log("warning", param.."\ndata:\n"..dump(node_data).."\nmeta:\n"..dump(node_meta).."\ntimer: "..node_timer:get_elapsed().."/"..node_timer:get_timeout());
+          terminal_log("warning", param.."\ndata:\n"..dump(node_data).."\nmeta:\n"..dump(node_meta).."\ntimer: "..node_timer:get_elapsed().."/"..node_timer:get_timeout());
           return true, "Node data has been printed into server terminal like warning.";
         else
           return false, "Node "..param.." data not found.";
@@ -236,7 +275,7 @@ local command_print_wielded_item = {
         local wielded_item = player:get_wielded_item();
         local item_name = wielded_item:get_name()
         
-        minetest.log("warning", item_name..":\n"..dump(wielded_item:to_table()));
+        terminal_log(name, item_name..":\n"..dump(wielded_item:to_table()));
         return true, "Wielded item data has been printed into server terminal like warning.";
       end
   };
@@ -256,7 +295,7 @@ local command_print_player = {
         if player==nil then
           return false, "Player "..player.." object not found.";
         end
-        minetest.log("warning", dump(player:get_properties()));
+        terminal_log(name, dump(player:get_properties()));
         return true, "Player data has been printed into server terminal like warning.";
       end
   };
@@ -382,7 +421,7 @@ local command_set_node_param2 = {
         local node_data = minetest.get_node(node_pos)
         node_data.param2 = tonumber(params[2])
         minetest.swap_node(node_pos, node_data);
-        return true, "Set param2 of node on  position "..params[1].." to "..params[2]..".";
+        return true, "Set param2 of node on position "..params[1].." to "..params[2]..".";
       end
   };
 minetest.register_chatcommand("set_node_param2", command_set_node_param2)
@@ -440,3 +479,16 @@ local command_exec_lua = {
   };
 minetest.register_chatcommand("exec_lua", command_exec_lua)
 
+local command_test_find = {
+    params = "",
+    description = "Test find.",
+    privs = {debug=true},
+    func = function (name, param)
+        local player = minetest.get_player_by_name(name)
+        local minp = vector.subtract(player:get_pos(), vector.new(1,0,1))
+        local maxp = vector.add(player:get_pos(), vector.new(1,0,1))
+        local found = minetest.find_nodes_in_area(minp, maxp, "air")
+        return true, "Minp: "..minetest.pos_to_string(minp).." Maxp: "..minetest.pos_to_string(maxp).." Found: "..dump(found);
+      end
+  };
+minetest.register_chatcommand("test_find", command_test_find)
