@@ -4,6 +4,10 @@ sfence_help = {}
 sfence_help.long_output_type = "terminal"
 sfence_help.long_output_type_param = ""
 
+local modpath = minetest.get_modpath(minetest.get_current_modname())
+
+dofile(modpath.."/lua_benchmark.lua")
+
 local function isFile(filename)
     local file = io.open(filename);
     if (file==nil) then 
@@ -492,3 +496,23 @@ local command_test_find = {
       end
   };
 minetest.register_chatcommand("test_find", command_test_find)
+
+local command_lua_benchmark = {
+    params = "<seed> <runs>",
+    description = "Benchmark Lua.",
+    privs = {debug=true},
+    func = function (name, param)
+				-- check parameters
+        local params = string.split(param or "", " ")
+        if (param==nil) or (param=="") or (#params<2) then
+          return false, "Use /set_node position node_name [param1] [param2]";
+        end
+				local seed = tonumber(params[1])
+				local runs = tonumber(params[2])
+				local results = sfence_help.lua_benchmark(seed, runs, function(msg)
+						terminal_log(name, msg)
+					end)
+        return true, "Benchmark results: "..dump(results);
+      end
+  };
+minetest.register_chatcommand("lua_benchmark", command_lua_benchmark)
