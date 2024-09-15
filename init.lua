@@ -469,7 +469,8 @@ minetest.register_chatcommand("print_mods", command_print_mods)
 
 local command_exec_lua = {
     params = "<code>",
-    description = "Exec lua code. Can cause unexpected behaviors.",
+    description = "Exec lua code. Can cause unexpected behaviors.\n"..
+			"Use 'return minetest.pos_to_string(pos)' or similar to print output into terminal.",
     privs = {debug=true},
     func = function (name, param)
         local result,errmsg = loadstring(param)
