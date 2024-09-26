@@ -517,3 +517,60 @@ local command_lua_benchmark = {
       end
   };
 minetest.register_chatcommand("lua_benchmark", command_lua_benchmark)
+
+local command_analyze_heat_humidity = {
+    params = "[step]",
+    description = "Analyze heat and humidity.",
+    privs = {debug=true},
+    func = function (name, param)
+				local step = math.abs(tonumber(param) or 1000)
+				local min_heat, max_heat
+				local min_hum, max_hum
+				local x = -31000
+				while x <= 31000 do
+					local z = -31000
+					while z <= 31000 do
+						local pos = vector.new(x, 0, z)
+						local heat = minetest.get_heat(pos)
+						if not min_heat or min_heat.val > heat then
+							min_heat = {
+									val = heat,
+									pos = pos
+								}
+						end
+						if not max_heat or max_heat.val < heat then
+							max_heat = {
+									val = heat,
+									pos = pos
+								}
+						end
+
+						local hum = minetest.get_humidity(pos)
+						if not min_hum or min_hum.val > hum then
+							min_hum = {
+									val = hum,
+									pos = pos
+								}
+						end
+						if not max_hum or max_hum.val < hum then
+							max_hum = {
+									val = hum,
+									pos = pos
+								}
+						end
+
+						z = z + step
+					end
+					x = x + step
+				end
+				local to_text = function(desc, data)
+					return desc..": "..data.val.." at "..minetest.pos_to_string(data.pos).."\n"
+				end
+        return true, "Analyze end: \n"
+					.. to_text("Min heat", min_heat)
+					.. to_text("Max heat", max_heat)
+					.. to_text("Min hum", min_hum)
+					.. to_text("Max hum", max_hum)
+      end
+  };
+minetest.register_chatcommand("analyze_heat_humidity", command_analyze_heat_humidity)
