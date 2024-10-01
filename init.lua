@@ -519,7 +519,7 @@ local command_lua_benchmark = {
 minetest.register_chatcommand("lua_benchmark", command_lua_benchmark)
 
 local command_analyze_heat_humidity = {
-    params = "[step]",
+    params = "<step>",
     description = "Analyze heat and humidity.",
     privs = {debug=true},
     func = function (name, param)
@@ -574,3 +574,39 @@ local command_analyze_heat_humidity = {
       end
   };
 minetest.register_chatcommand("analyze_heat_humidity", command_analyze_heat_humidity)
+
+local command_test_raycast = {
+    params = "<from> <to> <objects> <liquids> <pointabilities> [print]",
+    description = "Analyze heat and humidity.",
+    privs = {debug=true},
+    func = function (name, param)
+        -- check param
+        local params = string.split(param or "", " ")
+        if (param==nil) or (param=="") or (#params<2) then
+          return false, "Use /test_raycast pos_from pos_to [print]";
+        end
+        
+        local from_pos = minetest.string_to_pos(params[1])
+        if from_pos==nil then
+          return false, "Position "..params[1].." failed to conversion to pos.";
+        end
+        local to_pos = minetest.string_to_pos(params[2])
+        if to_pos==nil then
+          return false, "Position "..params[2].." failed to conversion to pos.";
+        end
+				local objects = (params[3] == "true") or (params[3] == "yes") or (params[3] == "1")
+				local liquids = (params[3] == "true") or (params[3] == "yes") or (params[3] == "1")
+				local pointabilities = (params[3] == "true") or (params[3] == "yes") or (params[3] == "1")
+
+				local startTime = os.clock()
+				local raycast = minetest.raycast(from_pos, to_pos, objects, liquids, pointabilities)
+				local baseTime = os.clock() - startTime
+				local pointing = raycast:next()
+				while pointing do
+					pointing = raycast:next()
+				end
+				local fullTime = os.clock() - startTime
+        return true, "Raycast base time: "..baseTime.." and full time: "..fullTime
+      end
+  };
+minetest.register_chatcommand("test_raycast", command_test_raycast)
