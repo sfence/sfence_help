@@ -4,7 +4,7 @@ sfence_help = {}
 sfence_help.long_output_type = "terminal"
 sfence_help.long_output_type_param = ""
 
-local modpath = minetest.get_modpath(minetest.get_current_modname())
+local modpath = core.get_modpath(core.get_current_modname())
 
 dofile(modpath.."/lua_benchmark.lua")
 
@@ -19,18 +19,18 @@ local function isFile(filename)
 
 local function terminal_log(name, message)
   if (sfence_help.long_output_type=="chat") then
-    minetest.chat_send_player(name, "[TERMINMAL MSG]: "..message)
+    core.chat_send_player(name, "[TERMINMAL MSG]: "..message)
   elseif (sfence_help.long_output_type=="file") then
-    local filename = minetest.get_worldpath().."/"..sfence_help.long_output_type_param;
+    local filename = core.get_worldpath().."/"..sfence_help.long_output_type_param;
     local file = io.open(filename,"a");
     if file then
       file:write(message.."\n");
       file:close()
     else
-      minetest.chat_send_player(name, "Output cannot be redirected to file \""..filename.."\".")
+      core.chat_send_player(name, "Output cannot be redirected to file \""..filename.."\".")
     end
   else
-    minetest.log("warning", message)
+    core.log("warning", message)
   end
 end
 
@@ -51,7 +51,7 @@ local command_long_output_type = {
         return true, "Long output type has been set to value \""..splitted[1].."\" with param \""..(splitted[2] or "").."\".";
       end
 }
-minetest.register_chatcommand("long_output_type", command_long_output_type)
+core.register_chatcommand("long_output_type", command_long_output_type)
 
 local command_print_all_items = {
     params = "<file>",
@@ -63,7 +63,7 @@ local command_print_all_items = {
           return false, "Use /print_all_items filename";
         end
         -- command body
-        local filename = minetest.get_worldpath().."/"..param;
+        local filename = core.get_worldpath().."/"..param;
          
         if isFile(filename) then
           return false, "File \""..filename.."\" already exists!";
@@ -72,7 +72,7 @@ local command_print_all_items = {
         local file = io.open(filename,"w");
         
         local use_items = {};
-        for item_name in pairs(minetest.registered_items) do
+        for item_name in pairs(core.registered_items) do
           --table.insert(use_items, item_name);
           file:write(item_name.."\n");
         end
@@ -86,7 +86,7 @@ local command_print_all_items = {
         return true, "List of registered items saved to file \""..filename.."\".";
       end
   };
-minetest.register_chatcommand("print_all_items", command_print_all_items)
+core.register_chatcommand("print_all_items", command_print_all_items)
 
 local command_print_all_recipes = {
     params = "<file>",
@@ -98,16 +98,16 @@ local command_print_all_recipes = {
           return false, "Use /print_all_recipes filename";
         end
         -- command body
-        local filename = minetest.get_worldpath().."/"..param;
+        local filename = core.get_worldpath().."/"..param;
         
         local use_items = {};
-        for item_name in pairs(minetest.registered_items) do
+        for item_name in pairs(core.registered_items) do
           table.insert(use_items, item_name);
         end
         table.sort(use_items);
         local list_text = "";
         for index, item_name in pairs(use_items) do
-          local recipes = minetest.get_all_craft_recipes(item_name);
+          local recipes = core.get_all_craft_recipes(item_name);
           if (recipes~=nil) then
             for key, recipe in pairs(recipes) do
               list_text = list_text..dump(recipe).."\n";
@@ -125,7 +125,7 @@ local command_print_all_recipes = {
         return true, "List of registered recipes saved to file \""..filename.."\".";
       end
   };
-minetest.register_chatcommand("print_all_recipes", command_print_all_recipes)
+core.register_chatcommand("print_all_recipes", command_print_all_recipes)
 
 local command_find_nearby_node = {
     params = "<nodename> <radius>",
@@ -139,15 +139,15 @@ local command_find_nearby_node = {
         local params = string.split(param or "", " ")
 				local radius = tonumber(params[2] or "128")
         
-        local player = minetest.get_player_by_name(name);
-        local find_pos = minetest.find_node_near(player:get_pos(), radius, params[1]);
+        local player = core.get_player_by_name(name);
+        local find_pos = core.find_node_near(player:get_pos(), radius, params[1]);
         if (find_pos==nil) then
           return false, "Node "..params[1].." not found in radius "..radius;
         end
         return true, "Node "..params[1].." found at x="..find_pos.x.." y="..find_pos.y.." z="..find_pos.z;
       end
   };
-minetest.register_chatcommand("find_nearby_node", command_find_nearby_node)
+core.register_chatcommand("find_nearby_node", command_find_nearby_node)
 
 local command_find_nearby_entity = {
     params = "<entityname> <radius>",
@@ -161,8 +161,8 @@ local command_find_nearby_entity = {
         local params = string.split(param or "", " ")
 				local radius = tonumber(params[2] or "128")
         
-        local player = minetest.get_player_by_name(name);
-        local objects = minetest.get_objects_inside_radius(player:get_pos(), radius);
+        local player = core.get_player_by_name(name);
+        local objects = core.get_objects_inside_radius(player:get_pos(), radius);
         local find_pos = nil;
         for _,object in pairs(objects) do
           local luaentity = object:get_luaentity()
@@ -177,7 +177,7 @@ local command_find_nearby_entity = {
         return true, "Entity "..param.." found at x="..find_pos.x.." y="..find_pos.y.." z="..find_pos.z;
       end
   };
-minetest.register_chatcommand("find_nearby_entity", command_find_nearby_entity)
+core.register_chatcommand("find_nearby_entity", command_find_nearby_entity)
 
 local command_remove_nearby_entities = {
     params = "<entityname>",
@@ -189,8 +189,8 @@ local command_remove_nearby_entities = {
           return false, "Use /remove_nearby_entities entityname";
         end
         
-        local player = minetest.get_player_by_name(name);
-        local objects = minetest.get_objects_inside_radius(player:get_pos(), 128);
+        local player = core.get_player_by_name(name);
+        local objects = core.get_objects_inside_radius(player:get_pos(), 128);
         local removed = 0
         for _,object in pairs(objects) do
           local luaentity = object:get_luaentity()
@@ -202,7 +202,7 @@ local command_remove_nearby_entities = {
         return true, "Removed "..removed.." entities."
       end
   };
-minetest.register_chatcommand("remove_nearby_entities", command_remove_nearby_entities)
+core.register_chatcommand("remove_nearby_entities", command_remove_nearby_entities)
 
 local command_print_definition_node = {
     params = "<nodename>",
@@ -214,7 +214,7 @@ local command_print_definition_node = {
           return false, "Use /print_definition_node nodename";
         end
         
-        local node_def = minetest.registered_items[param];
+        local node_def = core.registered_items[param];
         if node_def then
           terminal_log(name, param..":\n"..dump(node_def));
           return true, "Node definition has been printed into server terminal like warning.";
@@ -223,8 +223,8 @@ local command_print_definition_node = {
         end
       end
   };
-minetest.register_chatcommand("print_definition_node", command_print_definition_node)
-minetest.register_chatcommand("print_definition_item", command_print_definition_node)
+core.register_chatcommand("print_definition_node", command_print_definition_node)
+core.register_chatcommand("print_definition_item", command_print_definition_node)
 
 local command_print_definition_entity = {
     params = "<entityname>",
@@ -236,7 +236,7 @@ local command_print_definition_entity = {
           return false, "Use /print_definition_entity entityname";
         end
         
-        local entity_def = minetest.registered_entities[param];
+        local entity_def = core.registered_entities[param];
         if entity_def then
           terminal_log(name, param..":\n"..dump(entity_def));
           return true, "Entity definition has been printed into server terminal like warning.";
@@ -245,7 +245,7 @@ local command_print_definition_entity = {
         end
       end
   };
-minetest.register_chatcommand("print_definition_entity", command_print_definition_entity)
+core.register_chatcommand("print_definition_entity", command_print_definition_entity)
 
 local command_print_node = {
     params = "<position>",
@@ -257,14 +257,14 @@ local command_print_node = {
           return false, "Use /print_node position";
         end
         
-        local node_pos = minetest.string_to_pos(param)
+        local node_pos = core.string_to_pos(param)
         if node_pos==nil then
           return false, "Position "..param.." failed to conversion to pos.";
         end
-        local node_data = minetest.get_node(node_pos);
+        local node_data = core.get_node(node_pos);
         if node_data then
-          local node_meta = minetest.get_meta(node_pos):to_table();
-          local node_timer = minetest.get_node_timer(node_pos);
+          local node_meta = core.get_meta(node_pos):to_table();
+          local node_timer = core.get_node_timer(node_pos);
           terminal_log("warning", param.."\ndata:\n"..dump(node_data).."\nmeta:\n"..dump(node_meta).."\ntimer: "..node_timer:get_elapsed().."/"..node_timer:get_timeout());
           return true, "Node data has been printed into server terminal like warning.";
         else
@@ -272,14 +272,14 @@ local command_print_node = {
         end
       end
   };
-minetest.register_chatcommand("print_node", command_print_node)
+core.register_chatcommand("print_node", command_print_node)
 
 local command_print_wielded_item = {
     params = "",
     description = "Print wielded item data like warning to server terminal.",
     privs = {debug=true},
     func = function (name, param)
-        local player = minetest.get_player_by_name(name);
+        local player = core.get_player_by_name(name);
         local wielded_item = player:get_wielded_item();
         local item_name = wielded_item:get_name()
         
@@ -287,7 +287,7 @@ local command_print_wielded_item = {
         return true, "Wielded item data has been printed into server terminal like warning.";
       end
   };
-minetest.register_chatcommand("print_wielded_item", command_print_wielded_item)
+core.register_chatcommand("print_wielded_item", command_print_wielded_item)
 
 local command_print_player = {
     params = "<player_name>",
@@ -299,7 +299,7 @@ local command_print_player = {
           return false, "Use /print_player player_name";
         end
         
-        local player = minetest.get_player_by_name(param);
+        local player = core.get_player_by_name(param);
         if player==nil then
           return false, "Player "..player.." object not found.";
         end
@@ -307,7 +307,7 @@ local command_print_player = {
         return true, "Player data has been printed into server terminal like warning.";
       end
   };
-minetest.register_chatcommand("print_player", command_print_player)
+core.register_chatcommand("print_player", command_print_player)
 
 local command_lua2mts = {
     params = "<schema_name>",
@@ -320,7 +320,7 @@ local command_lua2mts = {
         end
         
         local schema_name = param
-        local dir = minetest.get_worldpath().."/schems/";
+        local dir = core.get_worldpath().."/schems/";
         local schema_lua_file = dir..schema_name..".lua"
         local f = io.open(schema_lua_file, "r");
         if not f then
@@ -330,7 +330,7 @@ local command_lua2mts = {
         f:close();
         schematic = loadstring(schematic.." return schematic");
         schematic = schematic()
-        schematic = minetest.serialize_schematic(schematic, "mts", {});
+        schematic = core.serialize_schematic(schematic, "mts", {});
         local f = io.open(dir..schema_name..".mts", "w");
         f:write(schematic);
         f:close();
@@ -338,7 +338,7 @@ local command_lua2mts = {
         return true, "Schema has been converted.";
       end
   };
-minetest.register_chatcommand("lua2mts", command_lua2mts)
+core.register_chatcommand("lua2mts", command_lua2mts)
 
 local command_set_node = {
     params = "<position> <node_name> [<param1>] [<param2>]",
@@ -351,18 +351,18 @@ local command_set_node = {
           return false, "Use /set_node position node_name [param1] [param2]";
         end
         
-        local node_pos = minetest.string_to_pos(params[1])
+        local node_pos = core.string_to_pos(params[1])
         if node_pos==nil then
           return false, "Position "..params[1].." failed to conversion to pos.";
         end
-        if not minetest.registered_nodes[params[2]] then
+        if not core.registered_nodes[params[2]] then
           return false, "Node with name "..params[2].." is not registered.";
         end
-        minetest.set_node(node_pos, {name=params[2],param1=tonumber(params[3] or "0"), param2=tonumber(params[4] or "0")});
+        core.set_node(node_pos, {name=params[2],param1=tonumber(params[3] or "0"), param2=tonumber(params[4] or "0")});
         return true, "Set node "..params[2].." on position "..params[1]..".";
       end
   };
-minetest.register_chatcommand("set_node", command_set_node)
+core.register_chatcommand("set_node", command_set_node)
 
 local command_swap_node = {
     params = "<position> <node_name> [<param1>] [<param2>]",
@@ -375,18 +375,18 @@ local command_swap_node = {
           return false, "Use /swap_node position node_name [param1] [param2]";
         end
         
-        local node_pos = minetest.string_to_pos(params[1])
+        local node_pos = core.string_to_pos(params[1])
         if node_pos==nil then
           return false, "Position "..params[1].." failed to conversion to pos.";
         end
-        if not minetest.registered_nodes[params[2]] then
+        if not core.registered_nodes[params[2]] then
           return false, "Node with name "..params[2].." is not registered.";
         end
-        minetest.set_node(node_pos, {name=params[2],param1=tonumber(params[3] or "0"), param2=tonumber(params[4] or "0")});
+        core.set_node(node_pos, {name=params[2],param1=tonumber(params[3] or "0"), param2=tonumber(params[4] or "0")});
         return true, "Swap to node "..params[2].." on position "..params[1]..".";
       end
   };
-minetest.register_chatcommand("swap_node", command_swap_node)
+core.register_chatcommand("swap_node", command_swap_node)
 
 local command_set_node_param1 = {
     params = "<position> <param1>",
@@ -399,17 +399,17 @@ local command_set_node_param1 = {
           return false, "Use /set_node_param1 position param1";
         end
         
-        local node_pos = minetest.string_to_pos(params[1])
+        local node_pos = core.string_to_pos(params[1])
         if node_pos==nil then
           return false, "Position "..params[1].." failed to conversion to pos.";
         end
-        local node_data = minetest.get_node(node_pos)
+        local node_data = core.get_node(node_pos)
         node_data.param1 = tonumber(params[2])
-        minetest.swap_node(node_pos, node_data);
+        core.swap_node(node_pos, node_data);
         return true, "Set param of node on  position "..params[1].." to "..params[2]..".";
       end
   };
-minetest.register_chatcommand("set_node_param1", command_set_node_param1)
+core.register_chatcommand("set_node_param1", command_set_node_param1)
 
 local command_set_node_param2 = {
     params = "<position> <param2>",
@@ -422,17 +422,17 @@ local command_set_node_param2 = {
           return false, "Use /set_node_param position param";
         end
         
-        local node_pos = minetest.string_to_pos(params[1])
+        local node_pos = core.string_to_pos(params[1])
         if node_pos==nil then
           return false, "Position "..params[1].." failed to conversion to pos.";
         end
-        local node_data = minetest.get_node(node_pos)
+        local node_data = core.get_node(node_pos)
         node_data.param2 = tonumber(params[2])
-        minetest.swap_node(node_pos, node_data);
+        core.swap_node(node_pos, node_data);
         return true, "Set param2 of node on position "..params[1].." to "..params[2]..".";
       end
   };
-minetest.register_chatcommand("set_node_param2", command_set_node_param2)
+core.register_chatcommand("set_node_param2", command_set_node_param2)
 
 local command_print_facedir_to_dir = {
     params = "<facedir>",
@@ -440,10 +440,10 @@ local command_print_facedir_to_dir = {
     privs = {debug=true},
     func = function (name, param)
         local facedir = tonumber(param)%32;
-        return true, "Facedir "..facedir.." dir is "..minetest.pos_to_string(minetest.facedir_to_dir(facedir));
+        return true, "Facedir "..facedir.." dir is "..core.pos_to_string(core.facedir_to_dir(facedir));
       end
   };
-minetest.register_chatcommand("print_facedir_to_dir", command_print_facedir_to_dir)
+core.register_chatcommand("print_facedir_to_dir", command_print_facedir_to_dir)
 
 local command_print_mods = {
     params = "<filename>",
@@ -451,7 +451,7 @@ local command_print_mods = {
     privs = {debug=true},
     func = function (name, param)
         -- command body
-        local filename = minetest.get_worldpath().."/"..param;
+        local filename = core.get_worldpath().."/"..param;
          
         if isFile(filename) then
           return false, "File \""..filename.."\" already exists!";
@@ -460,47 +460,47 @@ local command_print_mods = {
         local file = io.open(filename,"w");
         
         file:write("{\n")
-        for _,mod_name in pairs(minetest.get_modnames()) do
+        for _,mod_name in pairs(core.get_modnames()) do
           --table.insert(use_items, item_name);
-          file:write("  [\""..mod_name.."\"] = \""..minetest.get_modpath(mod_name).."\",\n");
+          file:write("  [\""..mod_name.."\"] = \""..core.get_modpath(mod_name).."\",\n");
         end
         file:write("}\n")
         file:close();
         return true, "Enabled mod names and paths has been saved to file \""..filename.."\".";
       end
   };
-minetest.register_chatcommand("print_mods", command_print_mods)
+core.register_chatcommand("print_mods", command_print_mods)
 
 local command_exec_lua = {
     params = "<code>",
     description = "Exec lua code. Can cause unexpected behaviors.\n"..
-			"Use 'return minetest.pos_to_string(pos)' or similar to print output into terminal.",
+			"Use 'return core.pos_to_string(pos)' or similar to print output into terminal.",
     privs = {debug=true},
     func = function (name, param)
         local result,errmsg = loadstring(param)
         if errmsg==nil then
-          minetest.log("warning", "Code \""..param.."\" execution result: "..dump(result()))
+          core.log("warning", "Code \""..param.."\" execution result: "..dump(result()))
           return true, "Execution done and result has been printed to server stdout as warning."
         else
           return false, "Execution finished with error: "..errmsg
         end
       end
   };
-minetest.register_chatcommand("exec_lua", command_exec_lua)
+core.register_chatcommand("exec_lua", command_exec_lua)
 
 local command_test_find = {
     params = "",
     description = "Test find.",
     privs = {debug=true},
     func = function (name, param)
-        local player = minetest.get_player_by_name(name)
+        local player = core.get_player_by_name(name)
         local minp = vector.subtract(player:get_pos(), vector.new(1,0,1))
         local maxp = vector.add(player:get_pos(), vector.new(1,0,1))
-        local found = minetest.find_nodes_in_area(minp, maxp, "air")
-        return true, "Minp: "..minetest.pos_to_string(minp).." Maxp: "..minetest.pos_to_string(maxp).." Found: "..dump(found);
+        local found = core.find_nodes_in_area(minp, maxp, "air")
+        return true, "Minp: "..core.pos_to_string(minp).." Maxp: "..core.pos_to_string(maxp).." Found: "..dump(found);
       end
   };
-minetest.register_chatcommand("test_find", command_test_find)
+core.register_chatcommand("test_find", command_test_find)
 
 local command_lua_benchmark = {
     params = "<seed> <runs>",
@@ -520,7 +520,7 @@ local command_lua_benchmark = {
         return true, "Benchmark results: "..dump(results);
       end
   };
-minetest.register_chatcommand("lua_benchmark", command_lua_benchmark)
+core.register_chatcommand("lua_benchmark", command_lua_benchmark)
 
 local command_analyze_heat_humidity = {
     params = "<step>",
@@ -535,7 +535,7 @@ local command_analyze_heat_humidity = {
 					local z = -31000
 					while z <= 31000 do
 						local pos = vector.new(x, 0, z)
-						local heat = minetest.get_heat(pos)
+						local heat = core.get_heat(pos)
 						if not min_heat or min_heat.val > heat then
 							min_heat = {
 									val = heat,
@@ -549,7 +549,7 @@ local command_analyze_heat_humidity = {
 								}
 						end
 
-						local hum = minetest.get_humidity(pos)
+						local hum = core.get_humidity(pos)
 						if not min_hum or min_hum.val > hum then
 							min_hum = {
 									val = hum,
@@ -568,7 +568,7 @@ local command_analyze_heat_humidity = {
 					x = x + step
 				end
 				local to_text = function(desc, data)
-					return desc..": "..data.val.." at "..minetest.pos_to_string(data.pos).."\n"
+					return desc..": "..data.val.." at "..core.pos_to_string(data.pos).."\n"
 				end
         return true, "Analyze end: \n"
 					.. to_text("Min heat", min_heat)
@@ -577,7 +577,7 @@ local command_analyze_heat_humidity = {
 					.. to_text("Max hum", max_hum)
       end
   };
-minetest.register_chatcommand("analyze_heat_humidity", command_analyze_heat_humidity)
+core.register_chatcommand("analyze_heat_humidity", command_analyze_heat_humidity)
 
 local command_test_raycast = {
     params = "<from> <to> <objects> <liquids> <pointabilities> [print]",
@@ -590,11 +590,11 @@ local command_test_raycast = {
           return false, "Use /test_raycast pos_from pos_to [print]";
         end
         
-        local from_pos = minetest.string_to_pos(params[1])
+        local from_pos = core.string_to_pos(params[1])
         if from_pos==nil then
           return false, "Position "..params[1].." failed to conversion to pos.";
         end
-        local to_pos = minetest.string_to_pos(params[2])
+        local to_pos = core.string_to_pos(params[2])
         if to_pos==nil then
           return false, "Position "..params[2].." failed to conversion to pos.";
         end
@@ -603,7 +603,7 @@ local command_test_raycast = {
 				local pointabilities = (params[3] == "true") or (params[3] == "yes") or (params[3] == "1")
 
 				local startTime = os.clock()
-				local raycast = minetest.raycast(from_pos, to_pos, objects, liquids, pointabilities)
+				local raycast = core.raycast(from_pos, to_pos, objects, liquids, pointabilities)
 				local baseTime = os.clock() - startTime
 				local pointing = raycast:next()
 				while pointing do
@@ -613,9 +613,9 @@ local command_test_raycast = {
         return true, "Raycast base time: "..baseTime.." and full time: "..fullTime
       end
   };
-minetest.register_chatcommand("test_raycast", command_test_raycast)
+core.register_chatcommand("test_raycast", command_test_raycast)
 
-minetest.register_node("sfence_help:kelp", {
+core.register_node("sfence_help:kelp", {
 	description = "Kelp or something",
 	drawtype = "nodebox",
 	paramtype = "light",
@@ -632,15 +632,15 @@ minetest.register_node("sfence_help:kelp", {
 	place_param2 = 255,
 })
 
-minetest.register_chatcommand("rays", {
+core.register_chatcommand("rays", {
 	description = "Do the rays",
 	func = function(name)
-		local t = minetest.get_us_time()
-		local p = minetest.get_player_by_name(name)
+		local t = core.get_us_time()
+		local p = core.get_player_by_name(name)
 		for i = 1, 1000 do
-			for thing in minetest.raycast(p:get_pos(), p:get_pos():offset(math.random(-100, 100), math.random(-100, 100), math.random(-100, 100)), false, false) do
+			for thing in core.raycast(p:get_pos(), p:get_pos():offset(math.random(-100, 100), math.random(-100, 100), math.random(-100, 100)), false, false) do
 			end
 		end
-		return true, (minetest.get_us_time() - t) .. "us" 
+		return true, (core.get_us_time() - t) .. "us" 
 	end
 })
