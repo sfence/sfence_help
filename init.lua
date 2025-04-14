@@ -128,27 +128,29 @@ local command_print_all_recipes = {
 minetest.register_chatcommand("print_all_recipes", command_print_all_recipes)
 
 local command_find_nearby_node = {
-    params = "<nodename>",
+    params = "<nodename> <radius>",
     description = "Print location of first found node with name <nodename>",
     privs = {debug=true},
     func = function (name, param)
         -- check param
         if (param==nil) or (param=="") then
-          return false, "Use /find_nearby_node nodename";
+          return false, "Use /find_nearby_node nodename radius";
         end
+        local params = string.split(param or "", " ")
+				local radius = tonumber(params[2] or "128")
         
         local player = minetest.get_player_by_name(name);
-        local find_pos = minetest.find_node_near(player:get_pos(), 128, param);
+        local find_pos = minetest.find_node_near(player:get_pos(), radius, params[1]);
         if (find_pos==nil) then
-          return false, "Node "..param.." not found in radius 128";
+          return false, "Node "..params[1].." not found in radius "..radius;
         end
-        return true, "Node "..param.." found at x="..find_pos.x.." y="..find_pos.y.." z="..find_pos.z;
+        return true, "Node "..params[1].." found at x="..find_pos.x.." y="..find_pos.y.." z="..find_pos.z;
       end
   };
 minetest.register_chatcommand("find_nearby_node", command_find_nearby_node)
 
 local command_find_nearby_entity = {
-    params = "<entityname>",
+    params = "<entityname> <radius>",
     description = "Print location of first found entity with name <entityname>",
     privs = {debug=true},
     func = function (name, param)
@@ -156,19 +158,21 @@ local command_find_nearby_entity = {
         if (param==nil) or (param=="") then
           return false, "Use /find_nearby_entity entityname";
         end
+        local params = string.split(param or "", " ")
+				local radius = tonumber(params[2] or "128")
         
         local player = minetest.get_player_by_name(name);
-        local objects = minetest.get_objects_inside_radius(player:get_pos(), 128);
+        local objects = minetest.get_objects_inside_radius(player:get_pos(), radius);
         local find_pos = nil;
         for _,object in pairs(objects) do
           local luaentity = object:get_luaentity()
-          if luaentity and (luaentity.name==param) then
+          if luaentity and (luaentity.name==params[1]) then
             find_pos = object:get_pos();
             break;
           end
         end
         if (find_pos==nil) then
-          return false, "Entity "..param.." not found in radius 128";
+          return false, "Entity "..param.." not found in radius "..radius.." around "..core.pos_to_string(player:get_pos());
         end
         return true, "Entity "..param.." found at x="..find_pos.x.." y="..find_pos.y.." z="..find_pos.z;
       end
@@ -610,3 +614,33 @@ local command_test_raycast = {
       end
   };
 minetest.register_chatcommand("test_raycast", command_test_raycast)
+
+minetest.register_node("sfence_help:kelp", {
+	description = "Kelp or something",
+	drawtype = "nodebox",
+	paramtype = "light",
+	paramtype2 = "leveled",
+	node_box = {
+		type = "leveled_plantlike",
+		fixed = { -0.4, -0.5, -0.4, 0.4, 0.4, 0.4 },
+	},
+	collision_box = {
+		type = "leveled_plantlike",
+		fixed = { -0.4, -0.5, -0.4, 0.4, 0.4, 0.4 },
+	},
+	groups = {dig_immediate=3},
+	place_param2 = 255,
+})
+
+minetest.register_chatcommand("rays", {
+	description = "Do the rays",
+	func = function(name)
+		local t = minetest.get_us_time()
+		local p = minetest.get_player_by_name(name)
+		for i = 1, 1000 do
+			for thing in minetest.raycast(p:get_pos(), p:get_pos():offset(math.random(-100, 100), math.random(-100, 100), math.random(-100, 100)), false, false) do
+			end
+		end
+		return true, (minetest.get_us_time() - t) .. "us" 
+	end
+})
