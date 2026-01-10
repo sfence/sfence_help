@@ -76,6 +76,9 @@ local command_print_all_items = {
 					--table.insert(use_items, item_name);
 					file:write(item_name.."\n");
 				end
+				for alias_name in pairs(core.registered_aliases) do
+					file:write(alias_name.."\n");
+				end
 				--table.sort(use_items);
 				--local list_text = "";
 				--for index, item_name in pairs(use_items) do
